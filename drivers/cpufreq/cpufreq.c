@@ -886,6 +886,28 @@ static ssize_t show_bios_limit(struct cpufreq_policy *policy, char *buf)
 	return sprintf(buf, "%u\n", policy->cpuinfo.max_freq);
 }
 
+/* SysFS Undervolts Control */
+extern ssize_t cpu_clock_get_vdd(char *buf);
+extern ssize_t cpu_clock_set_vdd(const char *buf, size_t count);
+
+static bool enable_voltage_control = true;
+module_param(enable_voltage_control, bool, 0664);
+
+static ssize_t show_UV_mV_table(struct cpufreq_policy *policy, char *buf)
+{
+	return cpu_clock_get_vdd(buf);
+}
+
+static ssize_t store_UV_mV_table(struct cpufreq_policy *policy,
+	const char *buf, size_t count)
+{
+	if (!enable_voltage_control)
+		return pr_info("Voltage control is disabled.\n");
+
+	return cpu_clock_set_vdd(buf, count);
+}
+/* SysFS Undervolts Control */
+
 cpufreq_freq_attr_ro_perm(cpuinfo_cur_freq, 0400);
 cpufreq_freq_attr_ro(cpuinfo_min_freq);
 cpufreq_freq_attr_ro(cpuinfo_max_freq);
