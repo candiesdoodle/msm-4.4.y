@@ -3,7 +3,7 @@
  * 		     are not related to any other subsystem
  *
  * Copyright (C) 2004 Kay Sievers <kay.sievers@vrfy.org>
- * 
+ *
  * This file is release under the GPLv2
  *
  */
@@ -228,9 +228,9 @@ static ssize_t gentle_fair_sleepers_store(struct kobject *kobj, struct kobj_attr
 	ret = sscanf(buf, "%u", &input);
 	if (input != 0 && input != 1)
 		input = 0;
-	
+
 	Lgentle_fair_sleepers = input;
-	relay_gfs(Lgentle_fair_sleepers);
+	//relay_gfs(Lgentle_fair_sleepers);
 	return count;
 }
 KERNEL_ATTR_RW(gentle_fair_sleepers);
@@ -247,9 +247,9 @@ static ssize_t arch_power_store(struct kobject *kobj, struct kobj_attribute *att
 	ret = sscanf(buf, "%u", &input);
 	if (input != 0 && input != 1)
 		input = 0;
-	
+
 	Larch_power = input;
-	relay_ap(Larch_power);
+	//relay_ap(Larch_power);
 	return count;
 }
 KERNEL_ATTR_RW(arch_power);
