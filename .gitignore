@@ -37,6 +37,11 @@ modules.builtin
 Module.symvers
 *.dwo
 *.su
+build.sh
+clean.sh
+/anykernel
+/out
+clang-build.sh
 
 #
 # Top-level generic files
