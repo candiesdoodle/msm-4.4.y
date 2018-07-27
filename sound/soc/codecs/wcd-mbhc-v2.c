@@ -67,9 +67,16 @@ enum wcd_mbhc_cs_mb_en_flag {
 	WCD_MBHC_EN_NONE,
 };
 
+/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 start */
+static bool wcd_swch_level_remove(struct wcd_mbhc *mbhc);
+/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 end */
+
 static void wcd_mbhc_jack_report(struct wcd_mbhc *mbhc,
 				struct snd_soc_jack *jack, int status, int mask)
 {
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+	pr_err("%s:%x,%x",__func__,status,mask);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 	snd_soc_jack_report(jack, status, mask);
 }
 
@@ -357,7 +364,9 @@ out_micb_en:
 		if (micbias2)
 			/* Disable cs, pullup & enable micbias */
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_MB);
-		else
+		/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 start */
+		else if(!wcd_swch_level_remove(mbhc))
+		/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 end */
 			/* Disable micbias, pullup & enable cs */
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_CS);
 		mutex_unlock(&mbhc->hphl_pa_lock);
@@ -375,7 +384,9 @@ out_micb_en:
 		if (micbias2)
 			/* Disable cs, pullup & enable micbias */
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_MB);
-		else
+		/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 start */
+		else if(!wcd_swch_level_remove(mbhc))
+		/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 end */
 			/* Disable micbias, pullup & enable cs */
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_CS);
 		mutex_unlock(&mbhc->hphr_pa_lock);
@@ -387,7 +398,9 @@ out_micb_en:
 		if (micbias2)
 			/* Disable cs, pullup & enable micbias */
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_MB);
-		else
+		/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 start */
+		else if(!wcd_swch_level_remove(mbhc))
+		/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 end */
 			/* Disable micbias, enable pullup & cs */
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_PULLUP);
 		break;
@@ -397,7 +410,9 @@ out_micb_en:
 		if (micbias2)
 			/* Disable cs, pullup & enable micbias */
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_MB);
-		else
+		/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 start */
+		else if(!wcd_swch_level_remove(mbhc))
+		/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 end */
 			/* Disable micbias, enable pullup & cs */
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_PULLUP);
 		break;
@@ -868,7 +883,7 @@ static void wcd_mbhc_find_plug_and_report(struct wcd_mbhc *mbhc,
 	bool anc_mic_found = false;
 	enum snd_jack_types jack_type;
 
-	pr_debug("%s: enter current_plug(%d) new_plug(%d)\n",
+	pr_err("%s: enter current_plug(%d) new_plug(%d)\n",
 		 __func__, mbhc->current_plug, plug_type);
 
 	WCD_MBHC_RSC_ASSERT_LOCKED(mbhc);
@@ -890,7 +905,9 @@ static void wcd_mbhc_find_plug_and_report(struct wcd_mbhc *mbhc,
 						SND_JACK_HEADPHONE);
 			if (mbhc->current_plug == MBHC_PLUG_TYPE_HEADSET)
 				wcd_mbhc_report_plug(mbhc, 0, SND_JACK_HEADSET);
-		wcd_mbhc_report_plug(mbhc, 1, SND_JACK_UNSUPPORTED);
+		/* Huaqin add for ZQL1650-155 by xudayi at 2018/02/02 start */
+		wcd_mbhc_report_plug(mbhc, 1, SND_JACK_HEADSET);
+		/* Huaqin add for ZQL1650-155 by xudayi at 2018/02/02 end */
 	} else if (plug_type == MBHC_PLUG_TYPE_HEADSET) {
 		if (mbhc->mbhc_cfg->enable_anc_mic_detect)
 			anc_mic_found = wcd_mbhc_detect_anc_plug_type(mbhc);
@@ -1139,7 +1156,9 @@ static void wcd_enable_mbhc_supply(struct wcd_mbhc *mbhc,
 		} else if (plug_type == MBHC_PLUG_TYPE_HEADPHONE) {
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_CS);
 		} else {
-			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_NONE);
+			/* Huaqin add for ZQL1650-155 by xudayi at 2018/02/02 start */
+			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_MB);
+			/* Huaqin add for ZQL1650-155 by xudayi at 2018/02/02 end */
 		}
 	}
 }
@@ -1191,6 +1210,19 @@ exit:
 	return spl_hs;
 }
 
+static void wcd_headset_btn_delay(struct work_struct *work)
+{
+	struct wcd_mbhc *mbhc =
+		container_of(work, typeof(*mbhc), mbhc_btn_delay_dwork.work);
+	/*
+	 * Allow delay between detection completion and the time when
+	 * headset button presses are allowed to be processed. This
+	 * is done in order to prevent spurious button interrupts
+	 * right after plug detection is finished.
+	 */
+	mbhc->ignore_btn_intr = false;
+}
+
 static void wcd_correct_swch_plug(struct work_struct *work)
 {
 	struct wcd_mbhc *mbhc;
@@ -1208,11 +1240,16 @@ static void wcd_correct_swch_plug(struct work_struct *work)
 	int rc, spl_hs_count = 0;
 	int cross_conn;
 	int try = 0;
+	int retry = 0;
+	int headset_cnt = 0;
 
 	pr_debug("%s: enter\n", __func__);
 
 	mbhc = container_of(work, struct wcd_mbhc, correct_plug_swch);
 	codec = mbhc->codec;
+
+	cancel_delayed_work_sync(&mbhc->mbhc_btn_delay_dwork);
+	mbhc->ignore_btn_intr = true;
 
 	/*
 	 * Enable micbias/pullup for detection in correct work.
@@ -1281,6 +1318,7 @@ correct_plug_type:
 
 	timeout = jiffies + msecs_to_jiffies(HS_DETECT_PLUG_TIME_MS);
 	while (!time_after(jiffies, timeout)) {
+		retry++;
 		if (mbhc->hs_detect_work_stop) {
 			pr_debug("%s: stop requested: %d\n", __func__,
 					mbhc->hs_detect_work_stop);
@@ -1333,7 +1371,7 @@ correct_plug_type:
 		 * instead of hogging system by contineous polling, wait for
 		 * sometime and re-check stop request again.
 		 */
-		msleep(180);
+		msleep(5 * retry);
 		if (hs_comp_res && (spl_hs_count < WCD_MBHC_SPL_HS_CNT)) {
 			spl_hs = wcd_mbhc_check_for_spl_headset(mbhc,
 								&spl_hs_count);
@@ -1342,6 +1380,18 @@ correct_plug_type:
 				hs_comp_res = 0;
 				spl_hs = true;
 				mbhc->micbias_enable = true;
+			}
+		}
+
+		/*
+		 * It's pretty certain to be a headset after being detected
+		 * as such 10 times, so exit early to reduce detection
+		 * latency.
+		 */
+		if (plug_type == MBHC_PLUG_TYPE_HEADSET) {
+			if (++headset_cnt == 10) {
+				wrk_complete = false;
+				break;
 			}
 		}
 
@@ -1365,7 +1415,8 @@ correct_plug_type:
 					pr_debug("%s: switch didnt work\n",
 						  __func__);
 					plug_type = MBHC_PLUG_TYPE_GND_MIC_SWAP;
-					goto report;
+					/* Retry instead in case of a noisy detection */
+					continue;
 				} else {
 					plug_type = MBHC_PLUG_TYPE_GND_MIC_SWAP;
 				}
@@ -1540,6 +1591,8 @@ exit:
 		mbhc->mbhc_cb->hph_pull_down_ctrl(codec, true);
 
 	mbhc->mbhc_cb->lock_sleep(mbhc, false);
+	schedule_delayed_work(&mbhc->mbhc_btn_delay_dwork,
+					msecs_to_jiffies(750));
 	pr_debug("%s: leave\n", __func__);
 }
 
@@ -1574,6 +1627,11 @@ static void wcd_mbhc_detect_plug_type(struct wcd_mbhc *mbhc)
 	pr_debug("%s: leave\n", __func__);
 }
 
+/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 start */
+int hph_ext_en_gpio = -1;
+int hph_ext_sw_gpio = -1;
+/* Huaqin add for solve headphone can not recognize by xudayi at 2018/02/12 end */
+
 static void wcd_mbhc_swch_irq_handler(struct wcd_mbhc *mbhc)
 {
 	bool detection_type = 0;
@@ -1591,6 +1649,24 @@ static void wcd_mbhc_swch_irq_handler(struct wcd_mbhc *mbhc)
 		pr_debug("%s: button press is canceled\n", __func__);
 
 	WCD_MBHC_REG_READ(WCD_MBHC_MECH_DETECTION_TYPE, detection_type);
+
+	/* Huaqin add for delete on audio newboard by xudayi at 2018/03/03 start */
+	#if 0
+	pr_err("%s: %s external headphone switch\n", __func__,detection_type ? "Enable" : "Disable");
+
+	if (!gpio_is_valid(hph_ext_en_gpio) || !gpio_is_valid(hph_ext_sw_gpio)) {
+		pr_err("%s: Invalid gpio: %d,%d\n", __func__,hph_ext_en_gpio,hph_ext_sw_gpio);
+	}
+
+	if (detection_type) {
+		gpio_direction_output(hph_ext_en_gpio, 1);
+		gpio_direction_output(hph_ext_sw_gpio, 1);
+	} else {
+		gpio_direction_output(hph_ext_sw_gpio, 0);
+		gpio_direction_output(hph_ext_en_gpio, 0);
+	}
+	#endif
+	/* Huaqin add for delete on audio newboard by xudayi at 2018/03/03 end */
 
 	/* Set the detection type appropriately */
 	WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_MECH_DETECTION_TYPE,
@@ -1711,8 +1787,9 @@ static irqreturn_t wcd_mbhc_mech_plug_detect_irq(int irq, void *data)
 {
 	int r = IRQ_HANDLED;
 	struct wcd_mbhc *mbhc = data;
-
-	pr_debug("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+	pr_err("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 	if (unlikely((mbhc->mbhc_cb->lock_sleep(mbhc, true)) == false)) {
 		pr_warn("%s: failed to hold suspend\n", __func__);
 		r = IRQ_NONE;
@@ -1765,8 +1842,9 @@ static irqreturn_t wcd_mbhc_hs_ins_irq(int irq, void *data)
 	u16 elect_result = 0;
 	static u16 hphl_trigerred;
 	static u16 mic_trigerred;
-
-	pr_debug("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+	pr_err("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 	if (!mbhc->mbhc_cfg->detect_extn_cable) {
 		pr_debug("%s: Returning as Extension cable feature not enabled\n",
 			__func__);
@@ -1849,8 +1927,9 @@ static irqreturn_t wcd_mbhc_hs_rem_irq(int irq, void *data)
 	unsigned long timeout;
 	bool removed = true;
 	int retry = 0;
-
-	pr_debug("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+	pr_err("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 
 	WCD_MBHC_RSC_LOCK(mbhc);
 
@@ -1960,16 +2039,19 @@ static void wcd_btn_lpress_fn(struct work_struct *work)
 	struct delayed_work *dwork;
 	struct wcd_mbhc *mbhc;
 	s16 btn_result = 0;
-
-	pr_debug("%s: Enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+	pr_err("%s: Enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 
 	dwork = to_delayed_work(work);
 	mbhc = container_of(dwork, struct wcd_mbhc, mbhc_btn_dwork);
 
 	WCD_MBHC_REG_READ(WCD_MBHC_BTN_RESULT, btn_result);
 	if (mbhc->current_plug == MBHC_PLUG_TYPE_HEADSET) {
-		pr_debug("%s: Reporting long button press event, btn_result: %d\n",
-			 __func__, btn_result);
+		/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+		pr_err("%s: Reporting long button press event, btn_result: %d %x\n",
+			 __func__, btn_result,mbhc->buttons_pressed);
+		/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 		wcd_mbhc_jack_report(mbhc, &mbhc->button_jack,
 				mbhc->buttons_pressed, mbhc->buttons_pressed);
 	}
@@ -2006,8 +2088,9 @@ static irqreturn_t wcd_mbhc_btn_press_handler(int irq, void *data)
 	struct wcd_mbhc *mbhc = data;
 	int mask;
 	unsigned long msec_val;
-
-	pr_debug("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+	pr_err("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 	complete(&mbhc->btn_press_compl);
 	WCD_MBHC_RSC_LOCK(mbhc);
 	wcd_cancel_btn_work(mbhc);
@@ -2039,6 +2122,11 @@ static irqreturn_t wcd_mbhc_btn_press_handler(int irq, void *data)
 				__func__);
 		goto done;
 	}
+
+	/* Don't process button interrupts immediately after plug detection */
+	if (mbhc->ignore_btn_intr)
+		goto done;
+
 	mbhc->buttons_pressed |= mask;
 	mbhc->mbhc_cb->lock_sleep(mbhc, true);
 	if (schedule_delayed_work(&mbhc->mbhc_btn_dwork,
@@ -2056,8 +2144,9 @@ static irqreturn_t wcd_mbhc_release_handler(int irq, void *data)
 {
 	struct wcd_mbhc *mbhc = data;
 	int ret;
-
-	pr_debug("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+	pr_err("%s: enter\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 	WCD_MBHC_RSC_LOCK(mbhc);
 	if (wcd_swch_level_remove(mbhc)) {
 		pr_debug("%s: Switch level is low ", __func__);
@@ -2081,6 +2170,14 @@ static irqreturn_t wcd_mbhc_release_handler(int irq, void *data)
 		goto exit;
 
 	}
+
+	/* Don't process button interrupts immediately after plug detection */
+	if (mbhc->ignore_btn_intr) {
+		wcd_cancel_btn_work(mbhc);
+		mbhc->buttons_pressed &= ~WCD_MBHC_JACK_BUTTON_MASK;
+		goto exit;
+	}
+
 	if (mbhc->buttons_pressed & WCD_MBHC_JACK_BUTTON_MASK) {
 		ret = wcd_cancel_btn_work(mbhc);
 		if (ret == 0) {
@@ -2118,8 +2215,9 @@ static irqreturn_t wcd_mbhc_hphl_ocp_irq(int irq, void *data)
 {
 	struct wcd_mbhc *mbhc = data;
 	int val;
-
-	pr_debug("%s: received HPHL OCP irq\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+	pr_err("%s: received HPHL OCP irq\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 	if (mbhc) {
 		if (mbhc->mbhc_cb->hph_register_recovery) {
 			if (mbhc->mbhc_cb->hph_register_recovery(mbhc)) {
@@ -2156,8 +2254,9 @@ done:
 static irqreturn_t wcd_mbhc_hphr_ocp_irq(int irq, void *data)
 {
 	struct wcd_mbhc *mbhc = data;
-
-	pr_debug("%s: received HPHR OCP irq\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 start */
+	pr_err("%s: received HPHR OCP irq\n", __func__);
+	/* Huaqin add for check headset event by xudayi at 2018/03/10 end */
 
 	if (!mbhc) {
 		pr_err("%s: Bad mbhc private data\n", __func__);
@@ -2894,6 +2993,8 @@ int wcd_mbhc_init(struct wcd_mbhc *mbhc, struct snd_soc_codec *codec,
 		INIT_DELAYED_WORK(&mbhc->mbhc_firmware_dwork,
 				  wcd_mbhc_fw_read);
 		INIT_DELAYED_WORK(&mbhc->mbhc_btn_dwork, wcd_btn_lpress_fn);
+		INIT_DELAYED_WORK(&mbhc->mbhc_btn_delay_dwork,
+						wcd_headset_btn_delay);
 	}
 	mutex_init(&mbhc->hphl_pa_lock);
 	mutex_init(&mbhc->hphr_pa_lock);

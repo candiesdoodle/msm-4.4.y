@@ -228,7 +228,8 @@ static int mdss_fb_notify_update(struct msm_fb_data_type *mfd,
 		mfd->update.ref_count++;
 		mutex_unlock(&mfd->update.lock);
 		ret = wait_for_completion_interruptible_timeout(
-						&mfd->update.comp, 4 * HZ);
+						&mfd->update.comp,
+						msecs_to_jiffies(4000));
 		mutex_lock(&mfd->update.lock);
 		mfd->update.ref_count--;
 		mutex_unlock(&mfd->update.lock);
@@ -251,7 +252,8 @@ static int mdss_fb_notify_update(struct msm_fb_data_type *mfd,
 		mfd->no_update.ref_count++;
 		mutex_unlock(&mfd->no_update.lock);
 		ret = wait_for_completion_interruptible_timeout(
-						&mfd->no_update.comp, 4 * HZ);
+						&mfd->no_update.comp,
+						msecs_to_jiffies(4000));
 		mutex_lock(&mfd->no_update.lock);
 		mfd->no_update.ref_count--;
 		mutex_unlock(&mfd->no_update.lock);
@@ -260,7 +262,8 @@ static int mdss_fb_notify_update(struct msm_fb_data_type *mfd,
 		if (mdss_fb_is_power_on(mfd)) {
 			reinit_completion(&mfd->power_off_comp);
 			ret = wait_for_completion_interruptible_timeout(
-						&mfd->power_off_comp, 1 * HZ);
+						&mfd->power_off_comp,
+						msecs_to_jiffies(1000));
 		}
 	}
 
@@ -4673,7 +4676,10 @@ static int mdss_fb_atomic_commit_ioctl(struct fb_info *info,
 	if (!mfd)
 		return -EINVAL;
 
+
 	mdp5_data = mfd_to_mdp5_data(mfd);
+
+
 
 	if (mfd->panel_info->panel_dead) {
 		pr_debug("early commit return\n");
@@ -4687,8 +4693,11 @@ static int mdss_fb_atomic_commit_ioctl(struct fb_info *info,
 			mfd->mdp.signal_retire_fence && mdp5_data)
 			mfd->mdp.signal_retire_fence(mfd,
 						mdp5_data->retire_cnt);
-		return 0;
+/* Huaqin modify for ZQL1650 by xieguoqiang at 2018/02/09 start */
+		//return 0;
+/* Huaqin modify for ZQL1650 by xieguoqiang at 2018/02/09 end */
 	}
+
 
 	output_layer_user = commit.commit_v1.output_layer;
 	if (output_layer_user) {
