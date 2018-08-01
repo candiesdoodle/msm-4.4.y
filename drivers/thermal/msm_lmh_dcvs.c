@@ -366,7 +366,7 @@ static struct cpu_cooling_ops cd_ops = {
 	.ceil_limit = lmh_set_max_limit,
 };
 
-int msm_lmh_dcvsh_sw_notify(int cpu)
+/*int msm_lmh_dcvsh_sw_notify(int cpu)
 {
 	struct msm_lmh_dcvs_hw *hw = get_dcvsh_hw_from_cpu(cpu);
 
@@ -375,7 +375,7 @@ int msm_lmh_dcvsh_sw_notify(int cpu)
 
 	lmh_dcvs_notify(hw);
 	return 0;
-}
+}*/
 
 static int msm_lmh_dcvs_probe(struct platform_device *pdev)
 {
