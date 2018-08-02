@@ -58,7 +58,7 @@ int TEMP_THRESHOLD 		= _temp_threshold;
 #if (NR_CPUS == 4)
     bool core_control = false;
 #elif (NR_CPUS == 6 || NR_CPUS == 8)    
-      bool core_control = true;
+      bool core_control = false;
 #endif
 static struct kobject *cc_kobj;
 #endif
