@@ -346,7 +346,7 @@ static void __ref check_temp(struct work_struct *work)
 	                 if (cpu_online(2))
 	                    cpu_down(2);
 	         }
-	         else if (temp == 40)
+	         else if (temp <= 40)
 	         {
 	                 int cpu;
 	                 for_each_possible_cpu(cpu)
