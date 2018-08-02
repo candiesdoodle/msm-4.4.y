@@ -41,7 +41,7 @@
 #include <linux/platform_device.h>
 
 // Temp Threshold is the LOWEST Level to Start Throttling.
-#define _temp_threshold		60
+#define _temp_threshold		45
 
 int TEMP_THRESHOLD 		= _temp_threshold;
 
@@ -49,7 +49,7 @@ int TEMP_THRESHOLD 		= _temp_threshold;
       #ifdef CONFIG_ARCH_MSM8916
              int FREQ_WARM 	= 800000;
       #else
-	   int FREQ_WARM 	= 864000;
+	   int FREQ_WARM 	= 1113000;
       #endif
 #endif
 
