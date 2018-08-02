@@ -41,7 +41,7 @@
 #include <linux/platform_device.h>
 
 // Temp Threshold is the LOWEST Level to Start Throttling.
-#define _temp_threshold		45
+#define _temp_threshold		60
 
 int TEMP_THRESHOLD 		= _temp_threshold;
 
@@ -58,7 +58,7 @@ int TEMP_THRESHOLD 		= _temp_threshold;
 #if (NR_CPUS == 4)
     bool core_control = false;
 #elif (NR_CPUS == 6 || NR_CPUS == 8)    
-      bool core_control = false;
+      bool core_control = true;
 #endif
 static struct kobject *cc_kobj;
 #endif
