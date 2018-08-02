@@ -836,7 +836,9 @@
 		qcom,temperature-sensor = <&sensor_information6>;
 		qcom,hotplug-mitigation-enable;
 	};
+	
 
+	#ifndef CONFIG_FRANCO_THERMAL
 	qcom,msm-thermal {
 		compatible = "qcom,msm-thermal";
 		qcom,sensor-id = <1>;
@@ -880,6 +882,7 @@
 			qcom,freq-req;
 		};
 	};
+	#endif
 
 	cx_ipeak_lm: cx_ipeak@1fe5040 {
 		compatible = "qcom,cx-ipeak-sdm660";
